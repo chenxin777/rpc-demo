@@ -1,0 +1,4 @@
+failBack=com.chenxin.rpc.fault.tolerant.FailBackTolerantStrategy
+failFast=com.chenxin.rpc.fault.tolerant.FailFastTolerantStrategy
+failOver=com.chenxin.rpc.fault.tolerant.FailOverTolerantStrategy
+failSafe=com.chenxin.rpc.fault.tolerant.FailSafeTolerantStrategy

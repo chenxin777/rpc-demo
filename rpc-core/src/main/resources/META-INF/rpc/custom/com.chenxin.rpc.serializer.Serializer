@@ -1,0 +1,2 @@
+json=com.chenxin.rpc.serializer.JsonSerializer
+kryo=com.chenxin.rpc.serializer.KryoSerializer
