@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,8 +85,9 @@ public class EtcdRegistry implements Registry{
 
     @Override
     public List<ServiceMetaInfo> serviceDiscovery(String serviceKey) {
+        log.info("[serviceDiscovery]：{}", serviceKey);
         // 优先从缓存中获取服务
-        List<ServiceMetaInfo> cachedServiceMetaInfoList = registryServiceCache.readCache();
+        List<ServiceMetaInfo> cachedServiceMetaInfoList = registryServiceCache.readCache(serviceKey);
         if (cachedServiceMetaInfoList != null) {
             log.info("---本次是从缓存中获取服务---");
             return cachedServiceMetaInfoList;
@@ -105,7 +107,8 @@ public class EtcdRegistry implements Registry{
                 return JSONUtil.toBean(value, ServiceMetaInfo.class);
             }).collect(Collectors.toList());
             // 写入缓存
-            registryServiceCache.writeCache(serviceMetaInfoList);
+            registryServiceCache.writeCache(serviceKey, serviceMetaInfoList);
+            log.info("注册中心缓存：{}", registryServiceCache.readAll());
             return serviceMetaInfoList;
         } catch (Exception ex) {
             throw new RuntimeException("获取服务列表失败", ex);
@@ -134,30 +137,27 @@ public class EtcdRegistry implements Registry{
 
     @Override
     public void heartBeat() {
-        // 10秒续签一次
-        CronUtil.schedule("*/10 * * * * *", new Task() {
-            @Override
-            public void execute() {
-                // 遍历本节点所有的key
-                for (String key : localRegisterNodeKeySet) {
-                    try {
-                        List<KeyValue> keyValues = kvClient.get(ByteSequence.from(key, StandardCharsets.UTF_8)).get().getKvs();
-                        // 该节点已过期（需要重启节点才能重新注册）
-                        if (CollUtil.isEmpty(keyValues)) {
-                            continue;
-                        }
-                        // 节点未过期，重新注册（续签）
-                        KeyValue keyValue = keyValues.get(0);
-                        String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
-                        ServiceMetaInfo serviceMetaInfo = JSONUtil.toBean(value, ServiceMetaInfo.class);
-                        register(serviceMetaInfo);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(key + "续签失败", ex);
+        // 20秒续签一次
+        CronUtil.schedule("*/20 * * * * *", (Task) () -> {
+            // 遍历本节点所有的key
+            for (String key : localRegisterNodeKeySet) {
+                try {
+                    List<KeyValue> keyValues = kvClient.get(ByteSequence.from(key, StandardCharsets.UTF_8)).get().getKvs();
+                    // 该节点已过期（需要重启节点才能重新注册）
+                    if (CollUtil.isEmpty(keyValues)) {
+                        continue;
                     }
+                    // 节点未过期，重新注册（续签）
+                    KeyValue keyValue = keyValues.get(0);
+                    String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
+                    ServiceMetaInfo serviceMetaInfo = JSONUtil.toBean(value, ServiceMetaInfo.class);
+                    register(serviceMetaInfo);
+                    log.info("服务节点{}续签成功", key);
+                } catch (Exception ex) {
+                    throw new RuntimeException(key + "续签失败", ex);
                 }
             }
         });
-
         // 支持秒级别定时任务
         CronUtil.setMatchSecond(true);
         CronUtil.start();
@@ -173,7 +173,31 @@ public class EtcdRegistry implements Registry{
                 for (WatchEvent event : response.getEvents()) {
                     switch (event.getEventType()) {
                         // key删除时触发 清理注册服务缓存
-                        case DELETE -> registryServiceCache.clearCache();
+                        case DELETE -> {
+                            log.info("-----服务节点：{},下线，删除缓存-----", serviceNodeKey);
+                            registryServiceCache.removeCacheByServiceNodeKey(serviceNodeKey);
+                        }
+                        case PUT -> {
+                            String json = event.getKeyValue().getValue().toString(StandardCharsets.UTF_8);
+                            ServiceMetaInfo serviceMetaInfo = JSONUtil.toBean(json, ServiceMetaInfo.class);
+                            // 判断缓存中是否存在该key
+                            String serviceKey = serviceNodeKey.split("/")[2];
+                            List<ServiceMetaInfo> serviceMetaInfoList = registryServiceCache.readCache(serviceKey);
+                            if (serviceMetaInfoList == null) {
+                                // 缓存不存在该服务,新创建一个
+                                serviceMetaInfoList = new ArrayList<>();
+                                serviceMetaInfoList.add(serviceMetaInfo);
+                                registryServiceCache.writeCache(serviceKey, serviceMetaInfoList);
+                                log.info("-----服务节点：{},上线，添加缓存-----", serviceNodeKey);
+                            } else {
+                                // 存在服务节点,为续签操作,不重复添加缓存
+                                if (!serviceMetaInfoList.contains(serviceMetaInfo)) {
+                                    serviceMetaInfoList.add(serviceMetaInfo);
+                                    log.info("-----服务节点：{},上线，添加缓存-----", serviceNodeKey);
+                                }
+                            }
+                        }
+                        default -> log.error("非法Etcd操作类型");
                     }
                 }
             });

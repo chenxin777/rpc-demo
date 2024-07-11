@@ -6,6 +6,7 @@ import com.chenxin.rpc.constant.RpcConstant;
 import com.chenxin.rpc.registry.Registry;
 import com.chenxin.rpc.registry.RegistryFactory;
 import com.chenxin.rpc.utils.ConfigUtils;
+import com.chenxin.rpc.utils.ConfigYmlUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -21,10 +22,10 @@ public class RpcApplication {
     private static volatile RpcConfig rpcConfig;
 
     /**
+     * @param newRpcConfig
      * @description 框架初始化，支持传入自定义配置
      * @author fangchenxin
      * @date 2024/3/25 21:25
-     * @param newRpcConfig
      */
     public static void init(RpcConfig newRpcConfig) {
         rpcConfig = newRpcConfig;
@@ -47,7 +48,8 @@ public class RpcApplication {
     public static void init() {
         RpcConfig newRpcConfig;
         try {
-            newRpcConfig = ConfigUtils.loadConfig(RpcConfig.class, RpcConstant.DEFAULT_CONFIG_PREFIX);
+            //newRpcConfig = ConfigUtils.loadConfig(RpcConfig.class, RpcConstant.DEFAULT_CONFIG_PREFIX);
+            newRpcConfig = ConfigYmlUtils.loadConfig(RpcConfig.class, RpcConstant.DEFAULT_CONFIG_PREFIX);
         } catch (Exception e) {
             // 配置加载失败，使用默认值
             newRpcConfig = new RpcConfig();
@@ -56,10 +58,10 @@ public class RpcApplication {
     }
 
     /**
+     * @return com.chenxin.rpc.config.RpcConfig
      * @description 获取配置
      * @author fangchenxin
      * @date 2024/3/25 21:31
-     * @return com.chenxin.rpc.config.RpcConfig
      */
     public static RpcConfig getRpcConfig() {
         if (rpcConfig == null) {

@@ -17,10 +17,10 @@ public class ExampleServiceImpl {
     @RpcReference
     private UserService userService;
 
-    public void test() {
+    public String test() {
         User user = new User();
         user.setName("fcx");
         User result = userService.getUser(user);
-        System.out.println(result.getName());
+        return result.getName();
     }
 }

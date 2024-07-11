@@ -1,7 +1,10 @@
 package com.chenxin.rpc.model;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
+
+import java.util.Date;
 
 /**
  * @author fangchenxin
@@ -33,14 +36,11 @@ public class ServiceMetaInfo {
     private int servicePort;
 
     /**
-     * 服务地址
-     */
-    //private String serviceAddress;
-
-    /**
      * 服务分组（暂未实现）
      */
     private String serviceGroup = "default";
+
+    private String registerTime = DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss");
 
     /**
      * @description 获取服务键名(服务名:版本)

@@ -23,11 +23,11 @@ public class VertTcpServer implements HttpServer {
         Vertx vertx = Vertx.vertx();
         // 创建tcp服务器
         NetServer server = vertx.createNetServer();
-        // 处理请求
+        // 处理请求 这部分逻辑仅用于测试
 //        server.connectHandler(socket -> {
 //            // 构造parser
 //            RecordParser parser = RecordParser.newFixed(8);
-//            parser.setOutput(new Handler<Buffer>() {
+//            parser.setOutput(new Handler<>() {
 //
 //                // 初始化
 //                int size = -1;
@@ -44,7 +44,7 @@ public class VertTcpServer implements HttpServer {
 //                    } else {
 //                        // 写入体信息到结果
 //                        resultBuffer.appendBuffer(buffer);
-//                        System.out.println(resultBuffer.toString());
+//                        System.out.println(resultBuffer);
 //                        // 重置一轮
 //                        parser.fixedSizeMode(8);
 //                        size = -1;

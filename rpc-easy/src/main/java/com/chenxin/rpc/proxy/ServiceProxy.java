@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 public class ServiceProxy implements InvocationHandler {
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) {
         // 指定序列化器
         JdkSerializer serializer = new JdkSerializer();
         // 构造请求

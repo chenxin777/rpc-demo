@@ -1,3 +1,5 @@
+server:
+  port: 8066
 rpc:
   name: rpc
   version: 2.0

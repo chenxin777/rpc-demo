@@ -2,7 +2,6 @@ package com.chenxin.rpc.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.setting.dialect.Props;
 import cn.hutool.setting.yaml.YamlUtil;
 import com.chenxin.rpc.config.RpcConfig;
 
@@ -25,7 +24,7 @@ public class ConfigYmlUtils {
             configFileBuilder.append("-").append(environment);
         }
         configFileBuilder.append(".yml");
-        Object config = YamlUtil.loadByPath(configFileBuilder.toString()).get("rpc");
-        return (T)BeanUtil.toBean(config, RpcConfig.class);
+        Object config = YamlUtil.loadByPath(configFileBuilder.toString()).get(prefix);
+        return BeanUtil.toBean(config, tClass);
     }
 }

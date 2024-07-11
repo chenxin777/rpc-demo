@@ -47,7 +47,7 @@ import java.util.concurrent.CompletableFuture;
 public class ServiceProxy implements InvocationHandler {
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) {
         RpcConfig rpcConfig = RpcApplication.getRpcConfig();
         String serviceName = method.getDeclaringClass().getName();
         // 构造请求

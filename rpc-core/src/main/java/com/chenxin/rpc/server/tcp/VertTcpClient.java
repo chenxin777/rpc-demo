@@ -34,16 +34,17 @@ public class VertTcpClient {
             if (result.succeeded()) {
                 System.out.println("Connected To TCP server");
                 NetSocket socket = result.result();
-                for (int i = 0; i < 1000; i++) {
+                for (int i = 0; i < 1; i++) {
                     // 发送数据
                     Buffer buffer = Buffer.buffer();
-                    String str = "hello, server!hello, server!hello, server!hello, server!";
+                    String str = "hello fcx! hello fcx!";
                     // 4字节
                     buffer.appendInt(0);
                     // 信息体长度 4字节
                     buffer.appendInt(str.getBytes(StandardCharsets.UTF_8).length);
                     // 信息体
                     buffer.appendBytes(str.getBytes(StandardCharsets.UTF_8));
+                    System.out.println("发送数据：" + buffer);
                     socket.write(buffer);
                 }
                 // 接收响应
